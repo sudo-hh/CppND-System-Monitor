@@ -3,31 +3,59 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <chrono>
+#include <thread>
 
 #include "process.h"
+#include "linux_parser.h"
 
 using std::string;
 using std::to_string;
 using std::vector;
 
-// TODO: Return this process's ID
-int Process::Pid() { return 0; }
+Process::Process(int Pid) : cpu_utilization{0.0} { this->setPid(Pid); }
 
-// TODO: Return this process's CPU utilization
-float Process::CpuUtilization() { return 0; }
+// Return this process's ID
+int Process::Pid() const { return this->pid; }
 
-// TODO: Return the command that generated this process
-string Process::Command() { return string(); }
+// Sets the PID number and the PID string
+void Process::setPid(int Pid) { 
+    this->pid = Pid;
+    this->pid_dir = LinuxParser::Uid(Pid);
+}
 
-// TODO: Return this process's memory utilization
-string Process::Ram() { return string(); }
+// Return this process's CPU utilization
+float Process::CpuUtilization() { 
+    std::vector<std::string> pid_stat = LinuxParser::CpuUtilization(this->pid_dir);
+    int index{13};
+    try {
+        long utime_number = std::stol(pid_stat[index++]);
+        long stime_number = std::stol(pid_stat[index++]);
+        long cutime_number = std::stol(pid_stat[index++]);
+        long cstime_number = std::stol(pid_stat[index++]);
+        long starttime_number = std::stol(pid_stat[21]);
 
-// TODO: Return the user (name) that generated this process
-string Process::User() { return string(); }
+        float total_pid_time = (utime_number + stime_number + cutime_number + cstime_number) / sysconf(_SC_CLK_TCK);
+        float seconds = LinuxParser::UpTime() - (starttime_number / sysconf(_SC_CLK_TCK));
 
-// TODO: Return the age of this process (in seconds)
-long int Process::UpTime() { return 0; }
+        this->cpu_utilization = (total_pid_time / seconds);
 
-// TODO: Overload the "less than" comparison operator for Process objects
-// REMOVE: [[maybe_unused]] once you define the function
-bool Process::operator<(Process const& a[[maybe_unused]]) const { return true; }
+        return this->cpu_utilization;
+
+    } catch (...) {
+        this->cpu_utilization = 0.0;
+        return this->cpu_utilization;
+    }
+}
+
+string Process::Command() { return LinuxParser::Command(this->pid_dir); }
+
+string Process::Ram() { return LinuxParser::Ram(this->pid_dir); }
+
+string Process::User() { return LinuxParser::User(this->pid_dir); }
+
+long int Process::UpTime() { return LinuxParser::UpTime(this->pid_dir); }
+
+bool Process::operator>(Process const& a) const { 
+    return (this->cpu_utilization -  a.cpu_utilization) > 0.0005; // Bigger by ~0.05 %
+}

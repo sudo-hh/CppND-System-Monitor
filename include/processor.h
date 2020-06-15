@@ -13,5 +13,4 @@ class Processor {
     float CPU_Percentage;
 };
 
-
 #endif

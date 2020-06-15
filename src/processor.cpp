@@ -3,22 +3,21 @@
 
 Processor::Processor() : Idle(0.0), NonIdle(0.0), Total(0.0), totald(0.0), idled(0.0), CPU_Percentage(0.0) {}
 
-// Format: user  nice  system  idle  iowait  irq  softirq  steal  guest  guest_nice
+// File Format: user  nice  system  idle  iowait  irq  softirq  steal  guest  guest_nice
 float Processor::Utilization() { 
     std::vector<std::string> cpu_data = LinuxParser::CpuUtilization();
-    std::string::size_type sz;     // alias of size_t
 
     int index{1};
-    float cpu_user = std::stof(cpu_data[index++],&sz);
-    float cpu_nice = std::stof(cpu_data[index++],&sz);
-    float cpu_system = std::stof(cpu_data[index++],&sz);
-    float cpu_idle = std::stof(cpu_data[index++],&sz);
-    float cpu_iowait = std::stof(cpu_data[index++],&sz);
-    float cpu_irq = std::stof(cpu_data[index++],&sz);
-    float cpu_softirq = std::stof(cpu_data[index++],&sz);
-    float cpu_steal = std::stof(cpu_data[index++],&sz);
-    float cpu_guest = std::stof(cpu_data[index++],&sz);
-    float cpu_guest_nice = std::stof(cpu_data[index++],&sz);
+    float cpu_user = std::stof(cpu_data[index++]);
+    float cpu_nice = std::stof(cpu_data[index++]);
+    float cpu_system = std::stof(cpu_data[index++]);
+    float cpu_idle = std::stof(cpu_data[index++]);
+    float cpu_iowait = std::stof(cpu_data[index++]);
+    float cpu_irq = std::stof(cpu_data[index++]);
+    float cpu_softirq = std::stof(cpu_data[index++]);
+    float cpu_steal = std::stof(cpu_data[index++]);
+    float cpu_guest = std::stof(cpu_data[index++]);
+    float cpu_guest_nice = std::stof(cpu_data[index++]);
 
     // Update user and nice time
     cpu_user -= cpu_guest;
